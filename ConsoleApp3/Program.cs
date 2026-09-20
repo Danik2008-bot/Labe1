@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace GeneticSearch
 {
@@ -68,11 +69,47 @@ namespace GeneticSearch
                     Protein protein;
                     protein.name = parts[0];
                     protein.organism = parts[1];
-                    protein.amino_acids = parts[2].Trim();
+                    protein.amino_acids = RLDecoding(parts[2].Trim());
                     data.Add(protein);
                 }
             }
             return data;
+        }
+
+        static string RLEncoding(string amino_acids)
+        {
+            StringBuilder encoded = new StringBuilder();
+            int i = 0;
+            while (i < amino_acids.Length)
+            {
+                char ch = amino_acids[i];
+                int count = 1;
+                while (i + count < amino_acids.Length && amino_acids[i + count] == ch && count < 9)
+                    count++;
+
+                if (count > 2) encoded.Append(count).Append(ch);
+                else encoded.Append(ch, count);
+
+                i += count;
+            }
+            return encoded.ToString();
+        }
+
+        static string RLDecoding(string amino_acids)
+        {
+            StringBuilder decoded = new StringBuilder();
+            for (int i = 0; i < amino_acids.Length; i++)
+            {
+                char ch = amino_acids[i];
+                if (char.IsDigit(ch) && i + 1 < amino_acids.Length)
+                {
+                    int count = ch - '0';
+                    decoded.Append(amino_acids[i + 1], count);
+                    i++;
+                }
+                else decoded.Append(ch);
+            }
+            return decoded.ToString();
         }
 
         ///<summary>
