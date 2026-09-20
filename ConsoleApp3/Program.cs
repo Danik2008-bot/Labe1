@@ -140,6 +140,60 @@ namespace GeneticSearch
             }
         }
 
+        static int FindProtein(List<Protein> proteins, string name)
+        {
+            for (int i = 0; i < proteins.Count; i++)
+                if (proteins[i].name == name) return i;
+            return -1;
+        }
+
+        static void WriteSeparator(StreamWriter writer)
+        {
+            writer.WriteLine(new string('-', LineWidth));
+        }
+
+        // ---------- Операции ----------
+
+        static void Search(List<Protein> proteins, string parameter, int number, StreamWriter writer)
+        {
+            writer.WriteLine($"{number:D3}   search   {parameter}");
+            // TODO: поиск подпоследовательности
+            WriteSeparator(writer);
+        }
+
+        static void Diff(List<Protein> proteins, string name1, string name2, int number, StreamWriter writer)
+        {
+            writer.WriteLine($"{number:D3}   diff   {name1}   {name2}");
+            // TODO: количество отличающихся аминокислот
+            WriteSeparator(writer);
+        }
+
+        static void Mode(List<Protein> proteins, string name, int number, StreamWriter writer)
+        {
+            writer.WriteLine($"{number:D3}   mode   {name}");
+            // TODO: самая частая аминокислота
+            WriteSeparator(writer);
+        }
+        // Операции выполняются по мере чтения списка команд
+        static void CommandHandler(List<Protein> proteins, List<Command> commands, StreamWriter writer)
+        {
+            for (int i = 0; i < commands.Count; i++)
+            {
+                int number = i + 1;
+                Command cmd = commands[i];
+
+                switch (cmd.name)
+                {
+                    case "search": Search(proteins, cmd.parameter1, number, writer); break;
+                    case "diff": Diff(proteins, cmd.parameter1, cmd.parameter2, number, writer); break;
+                    case "mode": Mode(proteins, cmd.parameter1, number, writer); break;
+                    default:
+                        Console.WriteLine($"Unknown command #{number}: {cmd.name}");
+                        break;
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             try
@@ -149,6 +203,17 @@ namespace GeneticSearch
 
                 List<Command> commands = ReadCommands("commands.0.txt");
                 PrintCommands(commands);
+
+                using (StreamWriter writer = new StreamWriter("genedata.txt", false, new UTF8Encoding(false)))
+                {
+                    writer.WriteLine(AuthorName);
+                    writer.WriteLine(Title);
+                    WriteSeparator(writer);
+
+                    CommandHandler(proteins, commands, writer);
+                }
+
+                Console.WriteLine("Done. Results written to genedata.txt");
             }
             catch (Exception ex)
             {
