@@ -176,17 +176,74 @@
         }
 
         static void Diff(List<Protein> proteins, string name1, string name2, int number, StreamWriter writer)
+        {
+
+            writer.WriteLine($"{number:D3}   diff   {name1}   {name2}");
+            writer.WriteLine("amino-acids difference:");
+
+            int i1 = FindProtein(proteins, name1);
+            int i2 = FindProtein(proteins, name2);
+
+            if (i1 < 0 || i2 < 0)
             {
-                writer.WriteLine($"{number:D3}   diff   {name1}   {name2}");
-                WriteSeparator(writer);
+
+                List<string> missing = new List<string>();
+                if (i1 < 0) missing.Add(name1);
+                if (i2 < 0) missing.Add(name2);
+                writer.WriteLine("MISSING: " + string.Join(", ", missing));
+            }
+            else
+            {
+                string a = proteins[i1].amino_acids;
+                string b = proteins[i2].amino_acids;
+                int shorter = Math.Min(a.Length, b.Length);
+
+                int difference = Math.Abs(a.Length - b.Length);
+
+                for (int k = 0; k < shorter; k++)
+                    if (a[k] != b[k]) difference++;
+
+                writer.WriteLine(difference);
             }
 
-            static void Mode(List<Protein> proteins, string name, int number, StreamWriter writer)
+            WriteSeparator(writer);
+        }
+
+        static void Mode(List<Protein> proteins, string name, int number, StreamWriter writer)
+        {
+            writer.WriteLine($"{number:D3}   mode   {name}");
+            writer.WriteLine("amino-acid occurs:");
+            int index = FindProtein(proteins, name);
+
+            if (index < 0)
             {
-                writer.WriteLine($"{number:D3}   mode   {name}");
-                WriteSeparator(writer);
+                writer.WriteLine("MISSING: " + name);
             }
-            static void CommandHandler(List<Protein> proteins, List<Command> commands, StreamWriter writer)
+            else
+            {
+                string sequence = proteins[index].amino_acids;
+                Dictionary<char, int> counts = new Dictionary<char, int>();
+                foreach (char ch in sequence)
+                {
+                    counts.TryGetValue(ch, out int c); 
+                    counts[ch] = c + 1;
+                }
+                char bestChar = '\0';
+                int bestCount = 0;
+                foreach (KeyValuePair<char, int> pair in counts)
+                {
+                    if (pair.Value > bestCount || (pair.Value == bestCount && pair.Key < bestChar))
+                    {
+                        bestChar = pair.Key;
+                        bestCount = pair.Value;
+                    }
+                }
+                writer.WriteLine(bestChar.ToString().PadRight(11) + bestCount);
+            }
+
+            WriteSeparator(writer);
+        }
+        static void CommandHandler(List<Protein> proteins, List<Command> commands, StreamWriter writer)
             {
                 for (int i = 0; i < commands.Count; i++)
                 {
